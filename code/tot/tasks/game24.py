@@ -1,5 +1,23 @@
+"""Game-of-24 task adapter.
+
+The wrapper methods (`*_prompt_wrap`, `value_outputs_unwrap`, `test_output`) are
+intentionally close to upstream Princeton ToT (`.ref/src/tot/tasks/game24.py`):
+
+  * The prompts they wrap are verbatim from upstream by design (see
+    `tot/prompts/game24.py` and `CLAUDE.md`).
+  * `test_output` is the success metric; drift here silently changes every
+    reported number. `tests/test_game24_checker.py::test_parity_with_upstream`
+    runs upstream's `test_output` in a clean subprocess and requires
+    byte-identical labels on a fixed set of cases.
+  * The wrappers themselves are 1-4 lines of glue around the verbatim prompts.
+
+The novel surface area in this file is `heuristic_value()`, which is a
+deterministic drop-in replacement for the LLM value prompt (extension 2).
+"""
 import os
 import re
+from collections import Counter
+
 import sympy
 import pandas as pd
 
@@ -82,11 +100,12 @@ class Game24Task(Task):
 
     @staticmethod
     def value_outputs_unwrap(x: str, y: str, value_outputs: list) -> float:
+        # Trajectory has 4 lines but no answer line -> malformed, score 0.
         if len(y.strip().split("\n")) == 4 and "answer" not in y.lower():
-            return 0
-        value_names = [_.split("\n")[-1] for _ in value_outputs]
-        value_map = {"impossible": 0.001, "likely": 1, "sure": 20}
-        return sum(v * value_names.count(name) for name, v in value_map.items())
+            return 0.0
+        weights = {"impossible": 0.001, "likely": 1.0, "sure": 20.0}
+        last_token_counts = Counter(out.split("\n")[-1] for out in value_outputs)
+        return sum(w * last_token_counts.get(label, 0) for label, w in weights.items())
 
     # --- Extension: deterministic heuristic value (drop-in for LLM evaluator) ---
 

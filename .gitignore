@@ -1,0 +1,15 @@
+.env
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Project artifacts
+*.log
+results/**/logs/
+!results/**/logs/.gitkeep

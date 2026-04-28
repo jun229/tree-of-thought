@@ -8,8 +8,14 @@ __pycache__/
 .venv/
 venv/
 .ipynb_checkpoints/
+.pytest_cache/
+
+# LLM response cache (regenerated on demand; large)
+code/.cache/
+.cache/
+
+# Upstream reference clone (used for parity tests)
+.ref/
 
 # Project artifacts
 *.log
-results/**/logs/
-!results/**/logs/.gitkeep

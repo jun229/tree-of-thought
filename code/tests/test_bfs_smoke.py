@@ -34,6 +34,7 @@ def _make_args(**overrides):
     a.method_generate = "propose"
     a.method_evaluate = "heuristic"  # avoids LLM call entirely
     a.method_select = "greedy"
+    a.algo = "bfs"
     a.n_generate_sample = 1
     a.n_evaluate_sample = 1
     a.n_select_sample = 5

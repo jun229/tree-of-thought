@@ -19,10 +19,14 @@ def aggregate(results_dir: Path, out_csv: Path) -> None:
             d = json.load(f)
         args = d.get("args", {})
         usage = d.get("usage", {})
+        # Naive runs aren't search runs, so report algo="" rather than the
+        # default "bfs" — keeps the CSV honest about what was actually run.
+        algo = "" if args.get("naive_run") else (args.get("algo") or "")
         rows.append({
             "run_id": d.get("run_id", summary.stem),
             "task": args.get("task", ""),
             "backend": args.get("backend", ""),
+            "algo": algo,
             "method_generate": args.get("method_generate") or "",
             "method_evaluate": args.get("method_evaluate") or "",
             "method_select": args.get("method_select") or "",

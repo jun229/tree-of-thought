@@ -44,7 +44,7 @@ def _run_id(args) -> str:
             f"_{args.task_start_index}-{args.task_end_index}"
         )
     return (
-        f"{backend}_T{args.temperature}"
+        f"{backend}_T{args.temperature}_{args.algo}"
         f"_{args.method_generate}{args.n_generate_sample}"
         f"_{args.method_evaluate}{args.n_evaluate_sample}"
         f"_{args.method_select}{args.n_select_sample}"
@@ -53,6 +53,11 @@ def _run_id(args) -> str:
 
 
 def run(args):
+    if not args.naive_run and args.algo != "bfs":
+        raise NotImplementedError(
+            f"--algo {args.algo!r} not implemented yet; only 'bfs' has a "
+            f"search module right now (tot/search/bfs.py)."
+        )
     reset_usage()
     task = get_task(args.task)
     run_id = _run_id(args)
@@ -148,6 +153,12 @@ def parse_args():
                    help="`heuristic` uses task.heuristic_value (deterministic, "
                         "no LLM calls). Extension 2 in the project plan.")
     p.add_argument("--method_select", type=str, choices=["sample", "greedy"], default="greedy")
+    p.add_argument(
+        "--algo", type=str, default="bfs", choices=["bfs", "dfs", "mcts"],
+        help="Tree-search algorithm. Currently only 'bfs' is implemented; the "
+             "flag exists so future MCTS/DFS runs get distinct run_ids without "
+             "colliding with these BFS results.",
+    )
     p.add_argument("--n_generate_sample", type=int, default=1)
     p.add_argument("--n_evaluate_sample", type=int, default=1)
     p.add_argument("--n_select_sample", type=int, default=1)

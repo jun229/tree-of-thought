@@ -41,6 +41,15 @@ After all 5 finish: `python merge_shards.py results/game24/claude_cli-haiku --pa
 - CoT-SC k=20 hits 100% acc_any on this slice — 20 attempts is enough that at least one passes for every puzzle. Per-sample acc_avg of 69.4% < CoT k=1's 80%, due to variance + temperature-induced sample diversity.
 - **`claude -p` has no `--max-tokens` flag.** Default cap is 32K output tokens. With an empty system prompt, haiku produced 25–30K-token responses to "Possible next steps:" prompts (we expected ~200). Cause: prompt is open-ended and few-shot example wasn't enough discipline. Fix: replace `--system-prompt ""` with a tiny format-discipline directive. Expected ~5–10× speedup per call AND meaningful accuracy improvement (verbose meta-commentary was breaking `test_output` parsing).
 - Per-`claude -p` latency in concurrent mode is dominated by output token count, not haiku's inference speed. With the system-prompt fix, expect per-call latency to drop from ~60s → ~10s.
+- **Extended thinking dominates haiku-4.5 latency even after the format fix.** A test prompt that produced 65 chars of visible output was still billed for 36K output tokens — the rest was internal thinking. Probed candidate `--settings` JSON keys to disable it. Findings (output_tokens / elapsed for the same value-prompt input "2 9 12"):
+  - baseline: 7855 / 49.6s
+  - `--effort low`: 7212 / 39.9s (small effect)
+  - `{"thinking":{"type":"disabled"}}`: 4660 / 25.2s
+  - `{"thinking":false}`: 5840 / 29.0s
+  - **`{"reasoning":false}`: 3471 / 18.0s** ← winner, applied in `tot/models.py::_CLAUDE_FLAGS`
+  - `{"extendedThinking":false}` and `{"thinkingBudget":0}`: silently ignored (keys not recognized)
+
+  Doesn't fully disable thinking (still ~3K thinking tokens vs ~100 visible), but a >60% latency cut is real. Test script lived at `/tmp/test_thinking_disable.py` — re-create from CLAUDE.md history if needed.
 
 ## Resume / crash recovery
 

@@ -121,10 +121,18 @@ _CLAUDE_SYSTEM_PROMPT = (
     "Match the format and length of the few-shot examples exactly. "
     "Do not add commentary, explanations, or items beyond what the examples show."
 )
+# `--settings '{"reasoning":false}'` partially disables extended thinking
+# on reasoning-capable models (haiku-4.5, sonnet-4.6). Empirically (probe at
+# /tmp/test_thinking_disable.py — see CLAUDE.md "Findings" section): drops
+# output_tokens 56% and per-call latency 64% vs baseline on haiku. Other
+# candidates we tried (`thinkingBudget:0`, `extendedThinking:false`) were
+# silently ignored. `thinking:{type:"disabled"}` also works but `reasoning`
+# is the cleanest result.
 _CLAUDE_FLAGS = [
     "-p",
     "--output-format", "json",
     "--system-prompt", _CLAUDE_SYSTEM_PROMPT,
+    "--settings", '{"reasoning":false}',
     "--tools", "",
     "--no-session-persistence",
     "--disable-slash-commands",

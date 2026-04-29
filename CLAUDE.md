@@ -8,6 +8,79 @@ CS 4782 final project: re-implementation of *Tree of Thoughts: Deliberate Proble
 
 Detailed plan lives at `~/.claude/plans/jaunty-roaming-umbrella.md`.
 
+## Current state (last updated 2026-04-29 ~02:30 EDT)
+
+Working on branch **`brian`**. Headline experiment (haiku, indices 900–925) in progress.
+
+**Done** (haiku, 900–925):
+| Run | acc_avg | acc_any | Elapsed | Cost |
+|---|---|---|---|---|
+| IO (`naive_standard_n1`) | 8.0% | 8.0% | 5 min | $0.33 |
+| CoT (`naive_cot_n1`) | 80.0% | 80.0% | 6 min | $0.43 |
+| CoT-SC k=20 (`naive_cot_n20`) | 69.4% | 100.0% | 8.5 hr | $7.34 |
+
+**In progress** — ToT b=1 sharded × 5 parallel processes (relaunched with format-discipline system prompt fix; see commit `7d1a025`):
+- `..._bfs_propose1_value3_greedy1_900-905`
+- `..._bfs_propose1_value3_greedy1_905-910`
+- `..._bfs_propose1_value3_greedy1_910-915`
+- `..._bfs_propose1_value3_greedy1_915-920`
+- `..._bfs_propose1_value3_greedy1_920-925`
+
+After all 5 finish: `python merge_shards.py results/game24/claude_cli-haiku --pattern claude_cli-haiku_T0.7_bfs_propose1_value3_greedy1 --start 900 --end 925` produces a canonical 25-puzzle run.
+
+**Killed** (deferred):
+- ToT b=5 (PID 84082) — was 0/25 at 1h53m. Will re-run on smaller slice (10 puzzles) later.
+- The first round of ToT b=1 shards (PIDs 26623, 26650, 26681, 26711, 26737). They were producing verbose meta-commentary that broke `test_output` parsing (shard 1 finished at 0/5 accuracy). Killed and relaunched after applying the system-prompt fix.
+
+**Cache history:**
+- `code/.cache/llm.bak-verbose/` (323 entries) — backup of all calls made BEFORE the system-prompt fix. These outputs include haiku's verbose "Looking at the puzzle..." commentary. Don't delete — useful for diagnostics.
+- `code/.cache/llm/` — fresh cache populated after the fix; concise outputs.
+
+**Surprising findings to flag in the report:**
+- Modern haiku CoT (80%) ≫ paper's GPT-4 CoT (4%). Likely because the 5-shot prompt walks through "Steps: ... Answer: ..." which structures haiku's output cleanly.
+- CoT-SC k=20 hits 100% acc_any on this slice — 20 attempts is enough that at least one passes for every puzzle. Per-sample acc_avg of 69.4% < CoT k=1's 80%, due to variance + temperature-induced sample diversity.
+- **`claude -p` has no `--max-tokens` flag.** Default cap is 32K output tokens. With an empty system prompt, haiku produced 25–30K-token responses to "Possible next steps:" prompts (we expected ~200). Cause: prompt is open-ended and few-shot example wasn't enough discipline. Fix: replace `--system-prompt ""` with a tiny format-discipline directive. Expected ~5–10× speedup per call AND meaningful accuracy improvement (verbose meta-commentary was breaking `test_output` parsing).
+- Per-`claude -p` latency in concurrent mode is dominated by output token count, not haiku's inference speed. With the system-prompt fix, expect per-call latency to drop from ~60s → ~10s.
+
+## Resume / crash recovery
+
+If Claude Code crashes, the laptop sleeps badly, or you need to pick up later:
+
+1. **Reattach to branch:** `git checkout brian` (you are probably already there)
+2. **Check what's persisted:**
+   ```bash
+   ls code/results/game24/claude_cli-haiku/    # JSONL + summary.json per run
+   ls code/.cache/llm | wc -l                  # LLM response cache (key resilience)
+   ```
+3. **Identify what's missing.** Each completed run has both `<run_id>.jsonl` AND `<run_id>.summary.json`. If the JSONL exists but summary is missing, that run was killed mid-way — re-run it (cache makes already-processed puzzles ~instant).
+4. **Re-launch missing runs.** All scripts are idempotent because of the cache:
+   ```bash
+   cd code
+   # Resume any specific shard:
+   START=900 END=905 BACKEND=claude_cli:haiku bash scripts/game24_tot_b1.sh
+   # Resume the b=5 we deferred (smaller slice):
+   START=900 END=910 BACKEND=claude_cli:haiku bash scripts/game24_tot_b5.sh
+   # Re-run a baseline:
+   START=900 END=925 BACKEND=claude_cli:haiku bash scripts/game24_io.sh
+   ```
+5. **Merge sharded runs into canonical:**
+   ```bash
+   python code/merge_shards.py code/results/game24/claude_cli-haiku \
+       --pattern claude_cli-haiku_T0.7_bfs_propose1_value3_greedy1 \
+       --start 900 --end 925
+   ```
+6. **Aggregate to CSV:**
+   ```bash
+   python code/analyze.py    # writes code/results/summary.csv
+   ```
+7. **Commit on `brian`:**
+   ```bash
+   git add code/results
+   git commit -m "haiku-25 BFS baseline: <description>"
+   ```
+
+The cache (`code/.cache/llm/`) is sha256-keyed by `(backend, prompt, temperature, n, stop)`. Re-running an interrupted condition is essentially free for puzzles that completed before the interruption — every LLM call is replayed from disk.
+
 ## Repo layout
 
 ```

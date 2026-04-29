@@ -101,13 +101,30 @@ def _split_model(model: str) -> tuple[str, str]:
 # Backend: claude -p subprocess (Pro/Max OAuth, no API key)
 # ---------------------------------------------------------------------------
 
-# Strip per-machine context from system prompt for cache reuse + lower overhead.
-# We can't pass --bare (it disables OAuth), so we do the next best thing:
-# replace the default system prompt with empty and disable tools/slash-commands.
+# Strip per-machine context from the system prompt for cache reuse + lower
+# overhead. We can't pass --bare (it disables OAuth), so we replace the
+# default system prompt with a tiny format-discipline instruction.
+#
+# WHY THE NON-EMPTY SYSTEM PROMPT: claude -p has no --max-tokens flag, and
+# its default max output is 32K tokens. With an empty system prompt, haiku
+# was generating 25-30K-token responses to "Possible next steps:" prompts
+# (hundreds of items instead of ~8). The few-shot examples in the prompt
+# specify the format, but haiku ignored their length without explicit
+# instruction. This cuts per-call latency by ~5-10x without affecting
+# correctness (downstream code already truncates at \n boundaries).
+#
+# Bumping this string changes output behavior — but the on-disk cache key
+# does not include the system prompt, so old (verbose) and new (concise)
+# entries can coexist for the same prompt. Treat verbose-era entries as
+# stale; new conditions automatically use the concise prompt going forward.
+_CLAUDE_SYSTEM_PROMPT = (
+    "Match the format and length of the few-shot examples exactly. "
+    "Do not add commentary, explanations, or items beyond what the examples show."
+)
 _CLAUDE_FLAGS = [
     "-p",
     "--output-format", "json",
-    "--system-prompt", "",
+    "--system-prompt", _CLAUDE_SYSTEM_PROMPT,
     "--tools", "",
     "--no-session-persistence",
     "--disable-slash-commands",

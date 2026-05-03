@@ -53,7 +53,13 @@ Input: {input}
 '''
 
 # 1-shot
-propose_prompt = '''Input: 2 8 8 14
+propose_prompt = '''List valid next steps for Game of 24.
+Output only lines in this exact format:
+a op b = c (left: remaining numbers)
+Use spaces inside "left:", not commas.
+Do not use markdown, numbering, bullets, headings, or explanations.
+
+Input: 2 8 8 14
 Possible next steps:
 2 + 8 = 10 (left: 8 10 14)
 8 / 2 = 4 (left: 4 8 14)
@@ -67,7 +73,8 @@ Input: {input}
 Possible next steps:
 '''
 
-value_prompt = '''Evaluate if given numbers can reach 24 (sure/likely/impossible)
+value_prompt = '''Evaluate if given numbers can reach 24.
+End your response with exactly one label on its own final line: sure, likely, or impossible.
 10 14
 10 + 14 = 24
 sure
@@ -109,6 +116,7 @@ impossible
 '''
 
 value_last_step_prompt = '''Use numbers and basic arithmetic operations (+ - * /) to obtain 24. Given an input and an answer, give a judgement (sure/impossible) if the answer is correct, i.e. it uses each input exactly once and no other numbers, and reach 24.
+End your response with exactly one label on its own final line: sure or impossible.
 Input: 4 4 6 8
 Answer: (4 + 8) * (6 - 4) = 24
 Judge:

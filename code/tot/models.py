@@ -4,6 +4,7 @@ Mirrors upstream `src/tot/models.py` in signature so search code (`bfs.py`)
 ports unchanged: `gpt(prompt, model, temperature, max_tokens, n, stop) -> list[str]`.
 
 Backends are selected via `model="<provider>:<name>"`:
+    openai:gpt-4o-mini            -> OpenAI API ($OPENAI_API_KEY)
     claude_cli:sonnet              -> shells out to `claude -p` (Pro/Max OAuth)
     claude_cli:haiku
     gemini:gemini-2.0-flash        -> Google AI Gemini API ($GEMINI_API_KEY)
@@ -72,6 +73,8 @@ def gpt(
 
     if provider == "claude_cli":
         outputs, usage = _call_claude_cli(prompt, model_name, n, max_tokens)
+    elif provider == "openai":
+        outputs, usage = _call_openai(prompt, model_name, temperature, max_tokens, n, stop)
     elif provider == "gemini":
         outputs, usage = _call_gemini(prompt, model_name, temperature, max_tokens, n, stop)
     elif provider == "groq":
@@ -147,6 +150,31 @@ def _call_claude_cli(
                 if attempt == max_retries - 1:
                     raise
                 time.sleep(2 ** attempt)
+    return out, usage
+
+
+# ---------------------------------------------------------------------------
+# Backend: OpenAI (official Python SDK)
+# ---------------------------------------------------------------------------
+
+def _call_openai(prompt, model, temperature, max_tokens, n, stop):
+    from openai import OpenAI
+
+    client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+    resp = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=temperature,
+        max_tokens=max_tokens,
+        n=n,
+        stop=stop or None,
+    )
+    out = [c.message.content or "" for c in resp.choices]
+    usage = {
+        "input_tokens": getattr(resp.usage, "prompt_tokens", 0) if resp.usage else 0,
+        "output_tokens": getattr(resp.usage, "completion_tokens", 0) if resp.usage else 0,
+        "cost_usd": 0.0,
+    }
     return out, usage
 
 

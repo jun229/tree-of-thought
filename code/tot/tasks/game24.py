@@ -84,9 +84,13 @@ class Game24Task(Task):
     def value_outputs_unwrap(x: str, y: str, value_outputs: list) -> float:
         if len(y.strip().split("\n")) == 4 and "answer" not in y.lower():
             return 0
-        value_names = [_.split("\n")[-1] for _ in value_outputs]
         value_map = {"impossible": 0.001, "likely": 1, "sure": 20}
-        return sum(v * value_names.count(name) for name, v in value_map.items())
+        value = 0.0
+        for output in value_outputs:
+            labels = re.findall(r"\b(sure|likely|impossible)\b", output.lower())
+            if labels:
+                value += value_map[labels[-1]]
+        return value
 
     # --- Extension: deterministic heuristic value (drop-in for LLM evaluator) ---
 

@@ -43,13 +43,34 @@ def _run_id(args) -> str:
             f"_n{args.n_generate_sample}"
             f"_{args.task_start_index}-{args.task_end_index}"
         )
-    return (
+    run_id = (
         f"{backend}_T{args.temperature}"
         f"_{args.method_generate}{args.n_generate_sample}"
         f"_{args.method_evaluate}{args.n_evaluate_sample}"
         f"_{args.method_select}{args.n_select_sample}"
-        f"_{args.task_start_index}-{args.task_end_index}"
     )
+    if args.n_monte_carlo > 1:
+        run_id += f"_mc{args.n_monte_carlo}"
+    return f"{run_id}_{args.task_start_index}-{args.task_end_index}"
+
+
+def _solve_with_monte_carlo(args, task, idx):
+    if args.naive_run or args.n_monte_carlo <= 1:
+        return solve(args, task, idx, to_print=args.verbose)
+
+    all_ys = []
+    rollouts = []
+    for rollout in range(args.n_monte_carlo):
+        if args.verbose:
+            print(f"== monte carlo rollout {rollout + 1}/{args.n_monte_carlo} ==")
+        ys, info = solve(args, task, idx, to_print=args.verbose)
+        all_ys.extend(ys)
+        rollouts.append({
+            "rollout": rollout,
+            "ys": ys,
+            "info": info,
+        })
+    return all_ys, {"monte_carlo_rollouts": rollouts}
 
 
 def run(args):
@@ -73,7 +94,7 @@ def run(args):
                 if args.naive_run:
                     ys, info = naive_solve(args, task, i, to_print=args.verbose)
                 else:
-                    ys, info = solve(args, task, i, to_print=args.verbose)
+                    ys, info = _solve_with_monte_carlo(args, task, i)
             except Exception as e:
                 print(f"[idx {i}] ERROR: {e!r}", file=sys.stderr)
                 ys, info = [], {"error": repr(e)}
@@ -151,6 +172,12 @@ def parse_args():
     p.add_argument("--n_generate_sample", type=int, default=1)
     p.add_argument("--n_evaluate_sample", type=int, default=1)
     p.add_argument("--n_select_sample", type=int, default=1)
+    p.add_argument(
+        "--n_monte_carlo", type=int, default=1,
+        help="For ToT only: repeat solve() this many stochastic rollouts per puzzle "
+             "and score over the pooled final candidates. Pair with "
+             "--method_select sample for Monte Carlo branch selection.",
+    )
 
     p.add_argument("--log_dir", type=str, default="results")
     p.add_argument("--verbose", action="store_true")

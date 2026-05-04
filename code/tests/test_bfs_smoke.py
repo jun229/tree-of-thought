@@ -108,6 +108,11 @@ def test_bfs_propose_greedy_b1_keeps_single_path():
         assert len(step["select_new_ys"]) == 1
 
 
+def test_sample_selection_without_replacement():
+    ids = bfs_mod._select([1, 1, 1], n_select_sample=5, method_select="sample")
+    assert sorted(ids) == [0, 1, 2]
+
+
 def test_naive_solve_produces_n_samples():
     task = Game24Task()
     task.data[0] = "1 1 4 6"

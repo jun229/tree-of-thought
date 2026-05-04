@@ -169,7 +169,8 @@ def _select(values, n_select_sample, method_select):
             ps = np.array([1.0 / len(values)] * len(values))
         else:
             ps = np.array(values) / total
-        return np.random.choice(ids, size=n_select_sample, p=ps).tolist()
+        size = min(n_select_sample, len(ids))
+        return np.random.choice(ids, size=size, replace=False, p=ps).tolist()
     if method_select == "greedy":
         return sorted(ids, key=lambda i: values[i], reverse=True)[:n_select_sample]
     raise ValueError(f"method_select {method_select!r} not recognized")

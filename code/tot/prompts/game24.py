@@ -18,7 +18,9 @@ Input: {input}
 '''
 
 # 5-shot
-cot_prompt = '''Use numbers and basic arithmetic operations (+ - * /) to obtain 24. Each step, you are only allowed to choose two of the remaining numbers to obtain a new number.
+cot_prompt = '''Use numbers and basic arithmetic operations (+ - * /) to obtain 24. 
+Each step, you are only allowed to choose two of the remaining numbers to obtain a new number. 
+Do not use markdown, bullets, numbering, headings, explanations, or extra text. Output exactly the below format.
 Input: 4 4 6 8
 Steps:
 4 + 8 = 12 (left: 4 6 12)

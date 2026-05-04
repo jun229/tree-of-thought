@@ -1,0 +1,31 @@
+{
+  "args": {
+    "backend": "openai:gpt-4o",
+    "backend_evaluate": null,
+    "temperature": 0.7,
+    "task": "game24",
+    "task_start_index": 905,
+    "task_end_index": 920,
+    "naive_run": false,
+    "prompt_sample": null,
+    "method_generate": "propose",
+    "method_evaluate": "heuristic",
+    "method_select": "greedy",
+    "n_generate_sample": 1,
+    "n_evaluate_sample": 1,
+    "n_select_sample": 5,
+    "log_dir": "results",
+    "verbose": true
+  },
+  "run_id": "openai-gpt-4o_T0.7_propose1_heuristic1_greedy5_905-920",
+  "n_puzzles": 15,
+  "accuracy_avg": 0.7422222222222223,
+  "accuracy_any": 0.8,
+  "usage": {
+    "completion_tokens": 14016,
+    "prompt_tokens": 40348,
+    "cached_tokens": 0,
+    "cost": 0.0
+  },
+  "elapsed_s": 251.2664451599121
+}

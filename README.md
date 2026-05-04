@@ -30,6 +30,7 @@ We target reproducing the IO/CoT/CoT-SC vs ToT b∈{1,5} ordering, accepting abs
 
 - **Algorithm** — BFS over thought-trees: at each depth, expand each surviving candidate via *propose* (one prompt, structured numeric continuations) or *sample* (CoT prompt, n samples), then score every candidate via *value* (LLM rates "sure/likely/impossible") or *vote* or `heuristic` (our reach-24 deterministic check), then prune to top-`b` greedily or by score-weighted sampling.
 - **Backends** (provider-agnostic dispatcher; select via `--backend <provider>:<model>`):
+  - `openai:gpt-4o-mini` — OpenAI API.
   - `claude_cli:sonnet` / `claude_cli:haiku` — shells out to `claude -p` against the user's Pro/Max OAuth (no API key).
   - `gemini:gemini-2.0-flash` — Google AI Gemini API.
   - `groq:llama-3.3-70b-versatile` — Groq free tier.
@@ -48,6 +49,7 @@ pip install -r code/requirements.txt
 # 2. Pick a backend. For Pro/Max users, no API key needed:
 export BACKEND=claude_cli:sonnet
 # Or, free options (require API keys):
+#   export OPENAI_API_KEY=...    BACKEND=openai:gpt-4o-mini
 #   export GROQ_API_KEY=...      BACKEND=groq:llama-3.3-70b-versatile
 #   export GEMINI_API_KEY=...    BACKEND=gemini:gemini-2.0-flash
 #   export OPENROUTER_API_KEY=.. BACKEND=openrouter:meta-llama/llama-3.1-70b-instruct:free

@@ -61,6 +61,40 @@ def test_handles_division():
     assert t.test_output(0, out) == {"r": 1}
 
 
+def test_accepts_valid_trajectory_without_answer():
+    t = _ours()
+    t.data[0] = "3 4 4 13"
+    out = (
+        "3 + 4 = 7 (left: 4 7 13)\n"
+        "13 - 7 = 6 (left: 4 6)\n"
+        "4 * 6 = 24 (left: 24)\n"
+    )
+    assert t.test_output(0, out) == {"r": 1}
+
+
+def test_accepts_valid_trajectory_before_bad_final_line():
+    t = _ours()
+    t.data[0] = "1 2 4 7"
+    out = (
+        "7 + 1 = 8 (left: 2 4 8)\n"
+        "8 - 2 = 6 (left: 4 6)\n"
+        "4 * 6 = 24 (left: 24)\n"
+        "Answer: 3 * 9 - 3 = 24\n"
+    )
+    assert t.test_output(0, out) == {"r": 1}
+
+
+def test_rejects_invalid_trajectory_that_claims_left_24():
+    t = _ours()
+    t.data[0] = "1 2 4 7"
+    out = (
+        "7 + 1 = 8 (left: 2 4 8)\n"
+        "8 - 2 = 6 (left: 4 6)\n"
+        "4 * 6 = 25 (left: 24)\n"
+    )
+    assert t.test_output(0, out) == {"r": 0}
+
+
 def test_handles_malformed_output():
     t = _ours()
     t.data[0] = "4 4 6 8"

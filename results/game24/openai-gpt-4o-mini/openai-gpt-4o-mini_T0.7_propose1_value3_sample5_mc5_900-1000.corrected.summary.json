@@ -1,0 +1,40 @@
+{
+  "run_id": "openai-gpt-4o-mini_T0.7_propose1_value3_sample5_mc5_900-1000",
+  "source_jsonl": "results\\game24\\openai-gpt-4o-mini\\openai-gpt-4o-mini_T0.7_propose1_value3_sample5_mc5_900-1000.jsonl",
+  "has_summary": true,
+  "n_puzzles": 100,
+  "old_correct_any": 45,
+  "corrected_correct_any": 45,
+  "old_accuracy_any": 0.45,
+  "corrected_accuracy_any": 0.45,
+  "old_accuracy_avg": 0.3184797473768061,
+  "corrected_accuracy_avg": 0.3184797473768061,
+  "changed_indices": [],
+  "error_count": 0,
+  "usage": {
+    "completion_tokens": 91827,
+    "prompt_tokens": 220883,
+    "cached_tokens": 0,
+    "cost": 0.0
+  },
+  "elapsed_s": 1828.821921825409,
+  "args": {
+    "backend": "openai:gpt-4o-mini",
+    "backend_evaluate": null,
+    "temperature": 0.7,
+    "task": "game24",
+    "task_start_index": 900,
+    "task_end_index": 1000,
+    "naive_run": false,
+    "prompt_sample": null,
+    "method_generate": "propose",
+    "method_evaluate": "value",
+    "method_select": "sample",
+    "n_generate_sample": 1,
+    "n_evaluate_sample": 3,
+    "n_select_sample": 5,
+    "n_monte_carlo": 5,
+    "log_dir": "results",
+    "verbose": true
+  }
+}

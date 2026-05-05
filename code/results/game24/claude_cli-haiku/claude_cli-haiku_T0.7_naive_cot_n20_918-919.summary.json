@@ -1,0 +1,32 @@
+{
+  "args": {
+    "backend": "claude_cli:haiku",
+    "backend_evaluate": null,
+    "temperature": 0.7,
+    "task": "game24",
+    "task_start_index": 918,
+    "task_end_index": 919,
+    "naive_run": true,
+    "prompt_sample": "cot",
+    "method_generate": null,
+    "method_evaluate": null,
+    "method_select": "greedy",
+    "algo": "bfs",
+    "n_generate_sample": 20,
+    "n_evaluate_sample": 1,
+    "n_select_sample": 1,
+    "log_dir": "results",
+    "verbose": false
+  },
+  "run_id": "claude_cli-haiku_T0.7_naive_cot_n20_918-919",
+  "n_puzzles": 1,
+  "accuracy_avg": 1.0,
+  "accuracy_any": 1.0,
+  "usage": {
+    "completion_tokens": 44018,
+    "prompt_tokens": 6141,
+    "cached_tokens": 0,
+    "cost": 0.25762714999999997
+  },
+  "elapsed_s": 294.2063112258911
+}

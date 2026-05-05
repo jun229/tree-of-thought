@@ -15,6 +15,10 @@ from pathlib import Path
 def aggregate(results_dir: Path, out_csv: Path) -> None:
     rows = []
     for summary in sorted(results_dir.rglob("*.summary.json")):
+        # Skip archived runs (e.g. _archive_thinking_on/ holds the original
+        # thinking-enabled CoT/CoT-SC numbers, kept for diff'ing only).
+        if any(part.startswith("_archive") for part in summary.parts):
+            continue
         with summary.open() as f:
             d = json.load(f)
         args = d.get("args", {})

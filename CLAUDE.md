@@ -8,29 +8,26 @@ CS 4782 final project: re-implementation of *Tree of Thoughts: Deliberate Proble
 
 Detailed plan lives at `~/.claude/plans/jaunty-roaming-umbrella.md`.
 
-## Current state (last updated 2026-04-29 ~02:30 EDT)
+## Current state (last updated 2026-05-08 ~17:00 EDT)
 
-Working on branch **`brian`**. Headline experiment (haiku, indices 900–925) in progress.
+Working on branch **`brian`**. Headline experiment matrix complete.
 
-**Done** (haiku, 900–925):
+**Done** (haiku, 900–925, post-fix `reasoning:false` + format-discipline system prompt):
 | Run | acc_avg | acc_any | Elapsed | Cost |
 |---|---|---|---|---|
 | IO (`naive_standard_n1`) | 8.0% | 8.0% | 5 min | $0.33 |
-| CoT (`naive_cot_n1`) | 80.0% | 80.0% | 6 min | $0.43 |
-| CoT-SC k=20 (`naive_cot_n20`) | 69.4% | 100.0% | 8.5 hr | $7.34 |
+| IO best-of-100 (`naive_standard_n100`) | **99.8%** | **100.0%** | 50 min (25-way parallel) | $22.85 |
+| CoT (`naive_cot_n1`) | 100.0% | 100.0% | 6 min | $0.43 |
+| CoT-SC k=20 (`naive_cot_n20`) | 100.0% | 100.0% | 19 min (20-way parallel) | $7.98 |
+| CoT best-of-100 (`naive_cot_n100`) | **99.6%** | **100.0%** | 127 min (25-way parallel) | $38.71 |
+| ToT b=1 (`bfs_propose1_value3_greedy1`) | 72.0% | 72.0% | ~50 min (5-way parallel) | ~$5 |
+| ToT b=5 (`bfs_propose1_value3_greedy5`) | — | 92.0% | — | — |
 
-**In progress** — ToT b=1 sharded × 5 parallel processes (relaunched with format-discipline system prompt fix; see commit `7d1a025`):
-- `..._bfs_propose1_value3_greedy1_900-905`
-- `..._bfs_propose1_value3_greedy1_905-910`
-- `..._bfs_propose1_value3_greedy1_910-915`
-- `..._bfs_propose1_value3_greedy1_915-920`
-- `..._bfs_propose1_value3_greedy1_920-925`
+**Headline finding for poster/report:** on a strong modern model (haiku-4.5), the paper's "ToT > CoT-SC > CoT > IO" ordering inverts at the top of the curve. CoT-SC k=20 already saturates acc_any at 100%; IO and CoT both reach 100% acc_any with enough samples. ToT b=5 caps at 92% acc_any on the same slice. The paper's signal was strongest on a weaker model (GPT-4 CoT 4%, ToT 74%); modern haiku makes Game-24 mostly easy, so the headline becomes "search beats sampling on weak models, sampling can match search on strong ones."
 
-After all 5 finish: `python merge_shards.py results/game24/claude_cli-haiku --pattern claude_cli-haiku_T0.7_bfs_propose1_value3_greedy1 --start 900 --end 925` produces a canonical 25-puzzle run.
+**Caveat on the IO n=1 baseline:** the 8% IO n=1 number is a parsing artifact, NOT haiku's true IO ceiling. Inspecting the cached n=1 outputs shows the model produces correct equations (e.g. `Answer: 6 * 5 - 10 + 4 = 24`) but appends a `**Verification:**` markdown block whose extra numbers confuse `test_output`'s multiset check. The format-discipline system prompt suppresses pre-Answer commentary but not post-Answer markdown. The IO n=100 result (99.8% acc_avg) is haiku's true IO competence; report this distinction or update the parser.
 
-**Killed** (deferred):
-- ToT b=5 (PID 84082) — was 0/25 at 1h53m. Will re-run on smaller slice (10 puzzles) later.
-- The first round of ToT b=1 shards (PIDs 26623, 26650, 26681, 26711, 26737). They were producing verbose meta-commentary that broke `test_output` parsing (shard 1 finished at 0/5 accuracy). Killed and relaunched after applying the system-prompt fix.
+**Cost tally:** ~$77 quota spent on the haiku-25 best-of-100 batch ($22.85 IO + $38.71 CoT + ~$15 in earlier baselines).
 
 **Cache history:**
 - `code/.cache/llm.bak-verbose/` (323 entries) — backup of all calls made BEFORE the system-prompt fix. These outputs include haiku's verbose "Looking at the puzzle..." commentary. Don't delete — useful for diagnostics.

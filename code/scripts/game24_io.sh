@@ -12,6 +12,6 @@ python run.py \
   --backend "$BACKEND" \
   --naive_run \
   --prompt_sample standard \
-  --n_generate_sample 1 \
+  --n_generate_sample "${N:-1}" \
   --task_start_index "$START" \
   --task_end_index "$END"

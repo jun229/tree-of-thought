@@ -43,7 +43,7 @@ def _run_id(args) -> str:
             f"_n{args.n_generate_sample}"
             f"_{args.task_start_index}-{args.task_end_index}"
         )
-    return (
+    run_id = (
         f"{backend}_T{args.temperature}_{args.algo}"
         f"_{args.method_generate}{args.n_generate_sample}"
         f"_{args.method_evaluate}{args.n_evaluate_sample}"

@@ -1,6 +1,11 @@
-# Verbatim from princeton-nlp/tree-of-thought-llm @ master
+# Adapted from princeton-nlp/tree-of-thought-llm @ master
 # (src/tot/prompts/game24.py). Reproduced under MIT license.
 # These prompt strings ARE the method (Yao et al., NeurIPS 2023, §3, §4.1).
+#
+# Modifications from upstream: format-discipline instructions added to
+# propose_prompt, cot_prompt, value_prompt, and value_last_step_prompt.
+# Without them, GPT-4o-mini generated verbose responses that broke downstream parsing. The few-shot examples are
+# unchanged; only the leading/trailing format instructions differ.
 
 # 5-shot
 standard_prompt = '''Use numbers and basic arithmetic operations (+ - * /) to obtain 24.

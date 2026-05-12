@@ -36,11 +36,13 @@ We target reproducing the IO/CoT/CoT-SC vs ToT b∈{1,5} ordering, accepting abs
   - `groq:llama-3.3-70b-versatile` — Groq free tier.
   - `openrouter:<slug>` — any OpenRouter model.
 - **Caching** — every `(backend, prompt, temperature, n, stop)` request is sha256-keyed in `.cache/llm/`. Re-runs are byte-identical and zero-call. Cached calls do not count toward `gpt_usage()`.
-- **Prompts** — `code/tot/prompts/game24.py` is a verbatim copy of upstream `src/tot/prompts/game24.py` (cited at top of file). The prompts ARE the method.
-- **Checker parity** — `tests/test_game24_checker.py::test_parity_with_upstream` runs both our `test_output` and upstream's on identical (puzzle, candidate) pairs and requires byte-identical labels.
+- **Prompts** — `code/tot/prompts/game24.py` is adapted from upstream `src/tot/prompts/game24.py` (cited at top of file). The few-shot examples are unchanged; format-discipline instructions were added to `propose_prompt`, `cot_prompt`, `value_prompt`, and `value_last_step_prompt` to suppress verbose model output that broke downstream parsing.
+- **Checker parity** — `tests/test_game24_checker.py::test_parity_with_upstream` runs both our `test_output` and upstream's on identical (puzzle, candidate) pairs and requires identical pass/fail labels on every case.
 - **Extensions**: (1) beam-width sweep b∈{1,3,5,7}; (2) deterministic reach-24 heuristic value (zero LLM eval calls); (3) cross-model frontier (claude_cli vs gemini vs groq); (4) verifier-model evaluator (strong proposer + cheap evaluator).
 
 ## 5. Reproduction Steps
+
+To reproduce the results for Claude Haiku, go to the "brian" branch. To reproduce the results for GPT-4o-mini, go to the "ethan" branch. To reproduce the results for qwen-3.5-2B, go to the "gemma3" branch
 
 ### 5.1: for GPT-4o-mini or Claude Haiku
 ```bash

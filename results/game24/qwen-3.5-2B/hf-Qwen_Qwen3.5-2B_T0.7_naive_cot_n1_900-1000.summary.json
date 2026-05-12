@@ -1,0 +1,31 @@
+{
+  "args": {
+    "backend": "hf:Qwen/Qwen3.5-2B",
+    "backend_evaluate": null,
+    "temperature": 0.7,
+    "task": "game24",
+    "task_start_index": 900,
+    "task_end_index": 1000,
+    "naive_run": true,
+    "prompt_sample": "cot",
+    "method_generate": null,
+    "method_evaluate": null,
+    "method_select": "greedy",
+    "n_generate_sample": 1,
+    "n_evaluate_sample": 1,
+    "n_select_sample": 1,
+    "log_dir": "results",
+    "verbose": false
+  },
+  "run_id": "hf-Qwen_Qwen3.5-2B_T0.7_naive_cot_n1_900-1000",
+  "n_puzzles": 100,
+  "accuracy_avg": 0.03,
+  "accuracy_any": 0.03,
+  "usage": {
+    "completion_tokens": 11887,
+    "prompt_tokens": 54901,
+    "cached_tokens": 0,
+    "cost": 0.0
+  },
+  "elapsed_s": 571.6719832420349
+}

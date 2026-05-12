@@ -78,7 +78,7 @@ python code/analyze.py
 
 ### 5.2 For Qwen
 
-1. Upload this rep to google drive
+1. Upload this repo to google drive
 2. run colab_gemma3.ipynb
 
 

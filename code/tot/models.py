@@ -9,6 +9,9 @@ Backends are selected via `model="<provider>:<name>"`:
     gemini:gemini-2.0-flash        -> Google AI Gemini API ($GEMINI_API_KEY)
     groq:llama-3.3-70b-versatile   -> Groq free tier ($GROQ_API_KEY)
     openrouter:<slug>              -> OpenRouter ($OPENROUTER_API_KEY)
+    hf:<model-id>                  -> HuggingFace Transformers local inference (Colab GPU)
+    hf:Qwen/Qwen3.5-2B-Instruct
+    hf:google/gemma-3-4b-it:4bit  -> append :4bit for 4-bit quantization (needs bitsandbytes)
 
 A bare `model="sonnet"` defaults to claude_cli.
 
@@ -57,7 +60,7 @@ def gpt(
     prompt: str,
     model: str = "claude_cli:sonnet",
     temperature: float = 0.7,
-    max_tokens: int = 1000,
+    max_tokens: int = 200,
     n: int = 1,
     stop: Any = None,
 ) -> list[str]:
@@ -78,6 +81,8 @@ def gpt(
         outputs, usage = _call_groq(prompt, model_name, temperature, max_tokens, n, stop)
     elif provider == "openrouter":
         outputs, usage = _call_openrouter(prompt, model_name, temperature, max_tokens, n, stop)
+    elif provider in ("hf", "gemma3"):
+        outputs, usage = _call_gemma3(prompt, model_name, temperature, max_tokens, n, stop)
     else:
         raise ValueError(f"Unknown provider {provider!r} (model={model!r})")
 
@@ -244,4 +249,109 @@ def _call_openrouter(prompt, model, temperature, max_tokens, n, stop):
         u = data.get("usage", {}) or {}
         usage["input_tokens"] += int(u.get("prompt_tokens", 0))
         usage["output_tokens"] += int(u.get("completion_tokens", 0))
+    return out, usage
+
+
+# ---------------------------------------------------------------------------
+# Backend: Gemma 3 via HuggingFace Transformers (Colab / local GPU)
+# ---------------------------------------------------------------------------
+# Model name format: "google/gemma-3-4b-it" or "google/gemma-3-12b-it:4bit"
+# The ":4bit" suffix enables 4-bit quantization (requires bitsandbytes).
+# Recommended Colab pairings:
+#   T4 (16 GB)  -> google/gemma-3-4b-it (bfloat16, ~8 GB)
+#   T4 (16 GB)  -> google/gemma-3-12b-it:4bit (~6 GB)
+#   A100 (40 GB)-> google/gemma-3-12b-it or google/gemma-3-27b-it:4bit
+
+_hf_model = None
+_hf_tokenizer = None
+_hf_model_id: str | None = None
+
+
+def _get_hf_model(model_id: str, load_in_4bit: bool = False):
+    global _hf_model, _hf_tokenizer, _hf_model_id
+    tag = model_id + (":4bit" if load_in_4bit else "")
+    if _hf_model_id != tag:
+        import torch
+        from transformers import AutoTokenizer, AutoModelForCausalLM
+
+        tokenizer = AutoTokenizer.from_pretrained(model_id)
+
+        load_kwargs: dict = {"device_map": "auto"}
+        if load_in_4bit:
+            from transformers import BitsAndBytesConfig
+            load_kwargs["quantization_config"] = BitsAndBytesConfig(load_in_4bit=True)
+        else:
+            load_kwargs["torch_dtype"] = torch.bfloat16
+
+        model = AutoModelForCausalLM.from_pretrained(model_id, **load_kwargs)
+        model.eval()
+
+        _hf_tokenizer = tokenizer
+        _hf_model = model
+        _hf_model_id = tag
+
+    return _hf_model, _hf_tokenizer
+
+
+def _call_gemma3(prompt: str, model: str, temperature: float, max_tokens: int, n: int, stop):
+    import torch
+
+    load_in_4bit = model.endswith(":4bit")
+    model_id = model.removesuffix(":4bit")
+
+    hf_model, tokenizer = _get_hf_model(model_id, load_in_4bit=load_in_4bit)
+
+    messages = [
+        {"role": "system", "content": "Follow the exact output format shown in the examples. Output only the required numbers and equations, no other text. If there is only one number left, write the Answer line and stop."},
+        {"role": "user", "content": prompt},
+    ]
+    input_text = tokenizer.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=True
+    )
+    inputs = tokenizer(input_text, return_tensors="pt").to(hf_model.device)
+    input_len = inputs["input_ids"].shape[1]
+
+    stop_seqs = ([stop] if isinstance(stop, str) else list(stop)) if stop else []
+
+    gen_kwargs: dict = {
+        "max_new_tokens": max_tokens,
+        "do_sample": temperature > 0,
+        "temperature": max(temperature, 1e-4),
+        "pad_token_id": tokenizer.eos_token_id,
+    }
+
+    use_batch = "qwen" in model_id.lower()
+    if use_batch and n > 1:
+        gen_kwargs["num_return_sequences"] = n
+
+    out: list[str] = []
+    total_output_tokens = 0
+    with torch.no_grad():
+        if use_batch:
+            output_ids = hf_model.generate(**inputs, **gen_kwargs)
+            for seq in output_ids:
+                new_ids = seq[input_len:]
+                text = tokenizer.decode(new_ids, skip_special_tokens=True).strip()
+                for s in stop_seqs:
+                    if s in text:
+                        text = text[:text.index(s)]
+                out.append(text)
+                total_output_tokens += len(new_ids)
+        else:
+            # Generate one at a time to avoid OOM on models with large VRAM footprint
+            for _ in range(n):
+                output_ids = hf_model.generate(**inputs, **gen_kwargs)
+                new_ids = output_ids[0][input_len:]
+                text = tokenizer.decode(new_ids, skip_special_tokens=True).strip()
+                for s in stop_seqs:
+                    if s in text:
+                        text = text[:text.index(s)]
+                out.append(text)
+                total_output_tokens += len(new_ids)
+
+    usage = {
+        "input_tokens": input_len * n,
+        "output_tokens": total_output_tokens,
+        "cost_usd": 0.0,
+    }
     return out, usage

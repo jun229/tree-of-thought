@@ -8,3 +8,7 @@ google-genai>=1.0
 groq>=0.11
 matplotlib>=3.7
 pytest>=7.4
+# Gemma 3 / HuggingFace backend (Colab GPU)
+transformers>=4.50
+accelerate>=0.26
+# bitsandbytes>=0.43  # optional: only needed for :4bit quantization

@@ -28,15 +28,20 @@ We target reproducing the IO/CoT/CoT-SC vs ToT b∈{1,5} ordering, accepting abs
 
 ## 4. Re-implementation Details
 
-- **Algorithm** — BFS over thought-trees: at each depth, expand each surviving candidate via *propose* (one prompt, structured numeric continuations) or *sample* (CoT prompt, n samples), then score every candidate via *value* (LLM rates "sure/likely/impossible") or *vote* or `heuristic` (our reach-24 deterministic check), then prune to top-`b` greedily or by score-weighted sampling.
-- **Backends** (provider-agnostic dispatcher; select via `--backend <provider>:<model>`):
-  - `claude_cli:haiku` — shells out to `claude -p` against the user's Pro/Max OAuth (no API key).
-  - `openai:gpt-4o-mini` — OpenAI API.
-  - `hf:Qwen/Qwen3.5-2B-Instruct` — HuggingFace Transformers local inference; requires GPU (Colab A100).
-- **Caching** — every `(backend, prompt, temperature, n, stop)` request is sha256-keyed in `.cache/llm/`. Re-runs are byte-identical and zero-call. Cached calls do not count toward `gpt_usage()`.
-- **Prompts** — `code/tot/prompts/game24.py` is adapted from upstream `src/tot/prompts/game24.py` (cited at top of file). The few-shot examples are unchanged; format-discipline instructions were added to `propose_prompt`, `cot_prompt`, `value_prompt`, and `value_last_step_prompt` to suppress verbose model output that broke downstream parsing.
-- **Checker parity** — `tests/test_game24_checker.py::test_parity_with_upstream` runs both our `test_output` and upstream's on identical (puzzle, candidate) pairs and requires identical pass/fail labels on every case.
-- **Extensions**: (1) beam-width sweep b∈{1,3,5,7}; (2) deterministic reach-24 heuristic value (zero LLM eval calls); (3) cross-model frontier (claude_cli vs gemini vs groq); (4) verifier-model evaluator (strong proposer + cheap evaluator).
+ - Describe your approach to re-implementation or experimentation
+ - Models: Claude Haiku 4.5, Qwen 3.5 2B, GPT-4o-mini
+ - Dataset: Game of 24 dataset used by the original paper
+ - Evaluation Metrics: 
+   - Models were evaluated based on their success in the Game of 24, a game where players try to get 24 by using the 4 basic arithmetic operations to reach 24 from 4 starting numbers. A trial was considered successful if the LM could reach 24 correctly and output in the correct format. 
+   - Each model was run with the following prompting methods: IO, CoT, CoT-SC, ToT (b=1), ToT (b=5), IO best of 100, and CoT best of 100.
+ - tools: In order to run Qwen locally, we utilized the Colab student subsciption to get access to the compute needed (in the form of A100 chips) 
+ - Extensions: 
+   1. Testing the prompting methods on models of varying sizes
+   2. Implementing and testing the models on a Monte Carlo Tree Search prompting method
+ - Challenges/Constraints: 
+   - Due to cost constraints, we could not use the original GPT-4 model that the paper used
+   - Due to cost constraints, we could not run Claude Haiku 4.5 on the full 100 game dataset
+   - Due to compute constraints, we could not locally host any models bigger than Qwen 3.5 2B.
 
 ## 5. Reproduction Steps
 

@@ -42,7 +42,7 @@ We target reproducing the IO/CoT/CoT-SC vs ToT b∈{1,5} ordering, accepting abs
 
 ## 5. Reproduction Steps
 
-# 5.1: for GPT-4o-mini or Claude Haiku
+### 5.1: for GPT-4o-mini or Claude Haiku
 ```bash
 # 1. Install
 pip install -r code/requirements.txt
@@ -76,7 +76,7 @@ python code/analyze.py
 
 **Compute**: no GPU required; all compute is API-bound. CPU-only laptop is sufficient. Subprocess overhead for `claude -p` is ~5–10s per call; budget ~3–5 minutes per ToT b=5 puzzle. Cache makes re-runs free.
 
-# 5.2 For Qwen
+### 5.2 For Qwen
 
 1. Upload this rep to google drive
 2. run colab_gemma3.ipynb

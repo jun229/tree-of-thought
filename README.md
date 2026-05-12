@@ -42,7 +42,7 @@ We target reproducing the IO/CoT/CoT-SC vs ToT b∈{1,5} ordering, accepting abs
 
 ## 5. Reproduction Steps
 
-To reproduce the results for Claude Haiku, go to the "brian" branch. To reproduce the results for GPT-4o-mini, go to the "ethan" branch. To reproduce the results for qwen-3.5-2B, go to the "gemma3" branch
+To reproduce the results for Claude Haiku 4.5, go to the "claude-haiku-4.5" branch. To reproduce the results for GPT-4o-mini, go to the "gpt-4o-mini" branch. To reproduce the results for qwen-3.5-2B, go to the "qwen-3.5-2b" branch
 
 ### 5.1: for GPT-4o-mini or Claude Haiku
 ```bash

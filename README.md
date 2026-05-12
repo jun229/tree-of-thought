@@ -90,20 +90,20 @@ python code/analyze.py
 
 ## 6. Results / Insights
 
-Results on Game of 24, indices 900–925, `claude_cli:haiku` (Claude Haiku 4.5). Run `python code/analyze.py` to regenerate from `results/`.
+`acc_any` across models on Game of 24 (indices 900–1000; haiku evaluated on 900–925). Run `python code/analyze.py` to regenerate from `results/`.
 
-| Condition | acc\_avg | acc\_any | Paper (GPT-4) acc\_any |
-|---|---|---|---|
-| IO n=1 | 8.0%† | 8.0%† | 7.3% |
-| IO best-of-100 | 99.8% | 100.0% | 33% |
-| CoT n=1 | 100.0% | 100.0% | 4.0% |
-| CoT-SC k=20 | 69.4% | 100.0% | 9.0% (k=100) |
-| ToT b=1 | 72.0% | 72.0% | 45% |
-| ToT b=5 | — | 92.0% | **74%** |
+| Condition | Paper (GPT-4) | Haiku 4.5 | GPT-4o-mini | Qwen 3.5-2B |
+|---|---|---|---|---|
+| IO n=1 | 7.3% | 8.0%† | 4.0% | 2.0% |
+| IO best-of-100 | 33% | 100.0% | — | 58.0% |
+| CoT n=1 | 4.0% | 100.0% | 3.0% | 3.0% |
+| CoT best-of-100 | 49% | 100.0% | 35.0% | 69.0% |
+| ToT b=1 | 45% | 72.0% | 20.0% | 0.0% |
+| ToT b=5 | **74%** | 92.0% | **41.0%** | 0.0%‡ |
 
-†IO n=1 acc is a parsing artifact — haiku produces correct equations but appends a `**Verification:**` block that confuses the checker. IO n=100 (99.8%) reflects haiku's true IO competence.
+†Haiku IO n=1 is a parsing artifact — the model produces correct equations but appends a `**Verification:**` block that confuses the checker; IO best-of-100 (100%) reflects true competence. ‡Qwen ToT b=5 evaluated on 30 puzzles.
 
-**Headline finding:** on a strong modern model, the paper's "ToT > CoT-SC > CoT > IO" ordering inverts. CoT n=1 already hits 100% acc\_any; ToT b=5 caps at 92%. The paper's advantage for ToT was clearest on GPT-4 where CoT scored only 4% — modern haiku makes Game of 24 mostly easy, so the takeaway becomes: *search beats sampling on weak models; sampling matches search on strong ones.*
+**Headline findings:** ToT's advantage is highly model-dependent. On strong models (haiku), CoT alone saturates the task (100% acc\_any) and ToT caps at 92% — the paper's "ToT > CoT" ordering inverts. On mid-tier models (GPT-4o-mini), the paper's ordering holds: ToT b=5 (41%) substantially outperforms CoT (3%). On the weak 2B model (Qwen), ToT collapses entirely (0%) — the model cannot reliably evaluate intermediate states — while best-of-100 sampling still reaches 69% via sheer volume.
 
 ## 7. Conclusion
 

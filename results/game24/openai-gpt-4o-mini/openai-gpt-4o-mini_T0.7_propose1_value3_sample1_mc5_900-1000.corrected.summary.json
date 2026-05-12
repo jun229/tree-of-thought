@@ -1,0 +1,17 @@
+{
+  "run_id": "openai-gpt-4o-mini_T0.7_propose1_value3_sample1_mc5_900-1000",
+  "source_jsonl": "results\\game24\\openai-gpt-4o-mini\\openai-gpt-4o-mini_T0.7_propose1_value3_sample1_mc5_900-1000.jsonl",
+  "has_summary": false,
+  "n_puzzles": 35,
+  "old_correct_any": 17,
+  "corrected_correct_any": 17,
+  "old_accuracy_any": 0.4857142857142857,
+  "corrected_accuracy_any": 0.4857142857142857,
+  "old_accuracy_avg": 0.2571428571428571,
+  "corrected_accuracy_avg": 0.2571428571428571,
+  "changed_indices": [],
+  "error_count": 0,
+  "usage": null,
+  "elapsed_s": null,
+  "args": null
+}

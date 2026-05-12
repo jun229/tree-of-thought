@@ -1,0 +1,5 @@
+{"idx": 900, "input": "4 5 6 10", "ys": ["Answer: (6 - 4) * (10 + 5) = 24"], "results": [{"r": 0}], "usage_so_far": {"completion_tokens": 18, "prompt_tokens": 180, "cached_tokens": 0, "cost": 0.0}, "info": {}}
+{"idx": 901, "input": "1 2 4 7", "ys": ["Answer: (7 - 1) * (4 - 2) = 24"], "results": [{"r": 0}], "usage_so_far": {"completion_tokens": 36, "prompt_tokens": 360, "cached_tokens": 0, "cost": 0.0}, "info": {}}
+{"idx": 902, "input": "2 5 8 11", "ys": ["Answer: (11 - 5) * (8 - 2) = 24"], "results": [{"r": 0}], "usage_so_far": {"completion_tokens": 54, "prompt_tokens": 540, "cached_tokens": 0, "cost": 0.0}, "info": {}}
+{"idx": 903, "input": "3 4 4 13", "ys": ["Answer: (13 - 4) * (4 - 3) = 24"], "results": [{"r": 0}], "usage_so_far": {"completion_tokens": 72, "prompt_tokens": 720, "cached_tokens": 0, "cost": 0.0}, "info": {}}
+{"idx": 904, "input": "6 7 8 9", "ys": ["Answer: (9 - 7) * (8 - 6) * 6 = 24"], "results": [{"r": 0}], "usage_so_far": {"completion_tokens": 93, "prompt_tokens": 900, "cached_tokens": 0, "cost": 0.0}, "info": {}}

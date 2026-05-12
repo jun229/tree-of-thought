@@ -1,0 +1,39 @@
+{
+  "source_jsonl": "results\\game24\\openai-gpt-4o-mini\\openai-gpt-4o-mini_T0.7_propose1_value3_greedy1_900-1000.jsonl",
+  "source_summary": "results\\game24\\openai-gpt-4o-mini\\openai-gpt-4o-mini_T0.7_propose1_value3_greedy1_900-1000.summary.json",
+  "run_id": "openai-gpt-4o-mini_T0.7_propose1_value3_greedy1_900-1000",
+  "n_puzzles": 100,
+  "old_accuracy_any": 0.2,
+  "corrected_accuracy_any": 0.2,
+  "old_accuracy_avg": 0.2,
+  "corrected_accuracy_avg": 0.2,
+  "old_correct_any": 20,
+  "corrected_correct_any": 20,
+  "changed_indices": [],
+  "error_count": 0,
+  "usage": {
+    "completion_tokens": 111243,
+    "prompt_tokens": 402093,
+    "cached_tokens": 0,
+    "cost": 0.0
+  },
+  "elapsed_s": 2345.7320313453674,
+  "args": {
+    "backend": "openai:gpt-4o-mini",
+    "backend_evaluate": null,
+    "temperature": 0.7,
+    "task": "game24",
+    "task_start_index": 900,
+    "task_end_index": 1000,
+    "naive_run": false,
+    "prompt_sample": null,
+    "method_generate": "propose",
+    "method_evaluate": "value",
+    "method_select": "greedy",
+    "n_generate_sample": 1,
+    "n_evaluate_sample": 3,
+    "n_select_sample": 1,
+    "log_dir": "results",
+    "verbose": true
+  }
+}

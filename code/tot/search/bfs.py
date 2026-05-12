@@ -8,11 +8,20 @@ of issuing an LLM value-prompt call (extension 2 in the project plan).
 from __future__ import annotations
 
 import itertools
+import re
 from functools import partial
 
 import numpy as np
 
 from tot.models import gpt as _gpt_default
+
+
+_PROPOSAL_RE = re.compile(
+    r"^\s*(?:[-*]\s*)?(?:\d+[.)]\s*)?\**\s*"
+    r"(-?\d+(?:\.\d+)?)\s*([+\-*/])\s*(-?\d+(?:\.\d+)?)\s*=\s*(-?\d+(?:\.\d+)?)"
+    r"\s*\**\s*\(left:\s*([^)]+)\)\s*(?:\[[^\]]*\])?\s*$"
+)
+_ANSWER_RE = re.compile(r"^\s*(?:answer:\s*)?(.+=\s*24)\s*$", re.IGNORECASE)
 
 
 def get_value(task, x, y, n_evaluate_sample, gpt_fn, cache_value=True):
@@ -50,10 +59,95 @@ def get_heuristic_values(task, x, ys):
     return [task.heuristic_value(x, y) for y in ys]
 
 
+def _numbers_close(a, b, tol=1e-6):
+    return abs(float(a) - float(b)) <= tol
+
+
+def _current_numbers(x, y):
+    if not y.strip():
+        return [float(n) for n in x.split()]
+    last_line = y.strip().split("\n")[-1]
+    if "left: " not in last_line:
+        return []
+    raw = last_line.split("left: ")[-1].split(")")[0]
+    return [float(n) for n in raw.replace(",", " ").split()]
+
+
+def _same_multiset(xs, ys):
+    if len(xs) != len(ys):
+        return False
+    remaining = list(xs)
+    for y in ys:
+        for i, x in enumerate(remaining):
+            if _numbers_close(x, y):
+                remaining.pop(i)
+                break
+        else:
+            return False
+    return True
+
+
+def _format_number(n):
+    n = float(n)
+    return str(int(n)) if n.is_integer() else f"{n:g}"
+
+
+def _canonical_proposal_line(line, current_numbers):
+    match = _PROPOSAL_RE.match(line)
+    if not match:
+        if len(current_numbers) == 1 and _numbers_close(current_numbers[0], 24):
+            answer = _ANSWER_RE.match(line)
+            if answer:
+                text = answer.group(1)
+                return text if text.lower().startswith("answer:") else f"Answer: {text}"
+        return None
+
+    a, op, b, result, left_raw = match.groups()
+    a_f, b_f, result_f = float(a), float(b), float(result)
+    if op == "+":
+        expected = a_f + b_f
+    elif op == "-":
+        expected = a_f - b_f
+    elif op == "*":
+        expected = a_f * b_f
+    elif op == "/" and not _numbers_close(b_f, 0):
+        expected = a_f / b_f
+    else:
+        return None
+    if not _numbers_close(expected, result_f):
+        return None
+
+    left = [float(n) for n in left_raw.replace(",", " ").split()]
+    expected_left = list(current_numbers)
+    for used in (a_f, b_f):
+        for i, n in enumerate(expected_left):
+            if _numbers_close(n, used):
+                expected_left.pop(i)
+                break
+        else:
+            return None
+    expected_left.append(result_f)
+    if not _same_multiset(expected_left, left):
+        return None
+
+    return (
+        f"{_format_number(a_f)} {op} {_format_number(b_f)} = {_format_number(result_f)} "
+        f"(left: {' '.join(_format_number(n) for n in left)})"
+    )
+
+
 def get_proposals(task, x, y, gpt_fn):
     propose_prompt = task.propose_prompt_wrap(x, y)
     raw = gpt_fn(propose_prompt, n=1, stop=None)[0]
-    return [y + line + "\n" for line in raw.split("\n") if line.strip()]
+    current_numbers = _current_numbers(x, y)
+    lines = []
+    seen = set()
+    for line in raw.split("\n"):
+        canonical = _canonical_proposal_line(line, current_numbers)
+        if canonical and canonical not in seen:
+            lines.append(y + canonical + "\n")
+            seen.add(canonical)
+    return lines
 
 
 def get_samples(task, x, y, n_generate_sample, prompt_sample, stop, gpt_fn):
@@ -75,7 +169,8 @@ def _select(values, n_select_sample, method_select):
             ps = np.array([1.0 / len(values)] * len(values))
         else:
             ps = np.array(values) / total
-        return np.random.choice(ids, size=n_select_sample, p=ps).tolist()
+        size = min(n_select_sample, len(ids))
+        return np.random.choice(ids, size=size, replace=False, p=ps).tolist()
     if method_select == "greedy":
         return sorted(ids, key=lambda i: values[i], reverse=True)[:n_select_sample]
     raise ValueError(f"method_select {method_select!r} not recognized")

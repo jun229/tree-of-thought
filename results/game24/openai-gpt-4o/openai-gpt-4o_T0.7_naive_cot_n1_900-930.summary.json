@@ -1,0 +1,31 @@
+{
+  "args": {
+    "backend": "openai:gpt-4o",
+    "backend_evaluate": null,
+    "temperature": 0.7,
+    "task": "game24",
+    "task_start_index": 900,
+    "task_end_index": 930,
+    "naive_run": true,
+    "prompt_sample": "cot",
+    "method_generate": null,
+    "method_evaluate": null,
+    "method_select": "greedy",
+    "n_generate_sample": 1,
+    "n_evaluate_sample": 1,
+    "n_select_sample": 1,
+    "log_dir": "results",
+    "verbose": true
+  },
+  "run_id": "openai-gpt-4o_T0.7_naive_cot_n1_900-930",
+  "n_puzzles": 30,
+  "accuracy_avg": 0.13333333333333333,
+  "accuracy_any": 0.13333333333333333,
+  "usage": {
+    "completion_tokens": 11233,
+    "prompt_tokens": 13110,
+    "cached_tokens": 0,
+    "cost": 0.0
+  },
+  "elapsed_s": 114.74845600128174
+}

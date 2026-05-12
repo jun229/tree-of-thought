@@ -30,6 +30,7 @@ We target reproducing the IO/CoT/CoT-SC vs ToT b∈{1,5} ordering, accepting abs
 
 - **Algorithm** — BFS over thought-trees: at each depth, expand each surviving candidate via *propose* (one prompt, structured numeric continuations) or *sample* (CoT prompt, n samples), then score every candidate via *value* (LLM rates "sure/likely/impossible") or *vote* or `heuristic` (our reach-24 deterministic check), then prune to top-`b` greedily or by score-weighted sampling.
 - **Backends** (provider-agnostic dispatcher; select via `--backend <provider>:<model>`):
+  - `openai:gpt-4o-mini` — OpenAI API.
   - `claude_cli:sonnet` / `claude_cli:haiku` — shells out to `claude -p` against the user's Pro/Max OAuth (no API key).
   - `gemini:gemini-2.0-flash` — Google AI Gemini API.
   - `groq:llama-3.3-70b-versatile` — Groq free tier.
@@ -41,6 +42,7 @@ We target reproducing the IO/CoT/CoT-SC vs ToT b∈{1,5} ordering, accepting abs
 
 ## 5. Reproduction Steps
 
+### 5.1: for GPT-4o-mini or Claude Haiku
 ```bash
 # 1. Install
 pip install -r code/requirements.txt
@@ -48,6 +50,7 @@ pip install -r code/requirements.txt
 # 2. Pick a backend. For Pro/Max users, no API key needed:
 export BACKEND=claude_cli:sonnet
 # Or, free options (require API keys):
+#   export OPENAI_API_KEY=...    BACKEND=openai:gpt-4o-mini
 #   export GROQ_API_KEY=...      BACKEND=groq:llama-3.3-70b-versatile
 #   export GEMINI_API_KEY=...    BACKEND=gemini:gemini-2.0-flash
 #   export OPENROUTER_API_KEY=.. BACKEND=openrouter:meta-llama/llama-3.1-70b-instruct:free
@@ -72,6 +75,13 @@ python code/analyze.py
 ```
 
 **Compute**: no GPU required; all compute is API-bound. CPU-only laptop is sufficient. Subprocess overhead for `claude -p` is ~5–10s per call; budget ~3–5 minutes per ToT b=5 puzzle. Cache makes re-runs free.
+
+### 5.2 For Qwen
+
+1. Upload this repo to google drive
+2. run colab_gemma3.ipynb
+
+
 
 ## 6. Results / Insights
 

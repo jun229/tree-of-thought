@@ -36,6 +36,79 @@ def get_current_numbers(y: str) -> str:
     return last_line.split("left: ")[-1].split(")")[0]
 
 
+_STEP_RE = re.compile(
+    r"^\s*(?:[-*]\s*)?(?:\d+[.)]\s*)?\**\s*"
+    r"(-?\d+(?:\.\d+)?)\s*([+\-*/])\s*(-?\d+(?:\.\d+)?)\s*=\s*(-?\d+(?:\.\d+)?)"
+    r"\s*\**\s*\(left:\s*([^)]+)\)\s*(?:\[[^\]]*\])?\s*$"
+)
+
+
+def _numbers_close(a, b, tol=1e-6) -> bool:
+    return abs(float(a) - float(b)) <= tol
+
+
+def _pop_number(nums: list[float], target: float) -> bool:
+    for i, n in enumerate(nums):
+        if _numbers_close(n, target):
+            nums.pop(i)
+            return True
+    return False
+
+
+def _same_multiset(xs: list[float], ys: list[float]) -> bool:
+    if len(xs) != len(ys):
+        return False
+    remaining = list(xs)
+    for y in ys:
+        if not _pop_number(remaining, y):
+            return False
+    return True
+
+
+def _trajectory_reaches_24(x: str, output: str) -> bool:
+    current = [float(n) for n in x.split()]
+    saw_step = False
+    for raw_line in output.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        match = _STEP_RE.match(line)
+        if not match:
+            continue
+        a, op, b, result, left_raw = match.groups()
+        a_f, b_f, result_f = float(a), float(b), float(result)
+        if op == "+":
+            expected = a_f + b_f
+        elif op == "-":
+            expected = a_f - b_f
+        elif op == "*":
+            expected = a_f * b_f
+        elif op == "/" and not _numbers_close(b_f, 0):
+            expected = a_f / b_f
+        else:
+            return False
+        if not _numbers_close(expected, result_f):
+            return False
+
+        next_nums = list(current)
+        if not _pop_number(next_nums, a_f) or not _pop_number(next_nums, b_f):
+            return False
+        next_nums.append(result_f)
+
+        try:
+            left = [float(n) for n in left_raw.replace(",", " ").split()]
+        except ValueError:
+            return False
+        if not _same_multiset(next_nums, left):
+            return False
+
+        current = left
+        saw_step = True
+        if len(current) == 1 and _numbers_close(current[0], 24):
+            return True
+    return saw_step and len(current) == 1 and _numbers_close(current[0], 24)
+
+
 class Game24Task(Task):
     """
     Input  (x): 4 space-separated integers
@@ -58,6 +131,9 @@ class Game24Task(Task):
         return self.data[idx]
 
     def test_output(self, idx: int, output: str) -> dict:
+        if _trajectory_reaches_24(self.data[idx], output):
+            return {"r": 1}
+
         expression = (
             output.strip()
             .split("\n")[-1]
@@ -86,7 +162,7 @@ class Game24Task(Task):
     def propose_prompt_wrap(x: str, y: str = "") -> str:
         current_numbers = get_current_numbers(y if y else x)
         if current_numbers == "24":
-            return cot_prompt.format(input=x) + "Steps:" + y
+            return cot_prompt.format(input=x) + y + "Answer:"
         return propose_prompt.format(input=current_numbers)
 
     @staticmethod
@@ -102,10 +178,14 @@ class Game24Task(Task):
     def value_outputs_unwrap(x: str, y: str, value_outputs: list) -> float:
         # Trajectory has 4 lines but no answer line -> malformed, score 0.
         if len(y.strip().split("\n")) == 4 and "answer" not in y.lower():
-            return 0.0
-        weights = {"impossible": 0.001, "likely": 1.0, "sure": 20.0}
-        last_token_counts = Counter(out.split("\n")[-1] for out in value_outputs)
-        return sum(w * last_token_counts.get(label, 0) for label, w in weights.items())
+            return 0
+        value_map = {"impossible": 0.001, "likely": 1, "sure": 20}
+        value = 0.0
+        for output in value_outputs:
+            labels = re.findall(r"\b(sure|likely|impossible)\b", output.lower())
+            if labels:
+                value += value_map[labels[-1]]
+        return value
 
     # --- Extension: deterministic heuristic value (drop-in for LLM evaluator) ---
 

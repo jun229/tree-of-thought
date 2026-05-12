@@ -143,7 +143,8 @@ def parse_args():
         "--backend", type=str, default="claude_cli:sonnet",
         help="<provider>:<model>. E.g. claude_cli:sonnet, claude_cli:haiku, "
              "gemini:gemini-2.0-flash, groq:llama-3.3-70b-versatile, "
-             "openrouter:meta-llama/llama-3.1-70b-instruct:free",
+             "openrouter:meta-llama/llama-3.1-70b-instruct:free, "
+             "gemma3:google/gemma-3-4b-it, gemma3:google/gemma-3-12b-it:4bit",
     )
     p.add_argument(
         "--backend_evaluate", type=str, default=None,

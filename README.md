@@ -70,6 +70,8 @@ bash scripts/game24_cot.sh       # CoT baseline
 bash scripts/game24_cot_sc.sh    # CoT-SC k=100
 bash scripts/game24_tot_b1.sh    # ToT b=1
 bash scripts/game24_tot_b5.sh    # ToT b=5
+bash scripts/game24_monte_carlo_b1.sh    # Monte Carlo ToT b=1
+bash scripts/game24_monte_carlo_b5.sh    # Monte Carlo ToT b=5
 
 # 5. Extensions
 bash scripts/ablate_beam.sh      # beam width sweep

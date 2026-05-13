@@ -28,7 +28,6 @@ We target reproducing the IO/CoT/CoT-SC vs ToT b∈{1,5} ordering, accepting abs
 
 ## 4. Re-implementation Details
 
- - Describe your approach to re-implementation or experimentation
  - Models: Claude Haiku 4.5, Qwen 3.5 2B, GPT-4o-mini
  - Dataset: Game of 24 dataset used by the original paper
  - Evaluation Metrics: 
@@ -41,7 +40,8 @@ We target reproducing the IO/CoT/CoT-SC vs ToT b∈{1,5} ordering, accepting abs
  - Challenges/Constraints: 
    - Due to cost constraints, we could not use the original GPT-4 model that the paper used
    - Due to cost constraints, we could not run Claude Haiku 4.5 on the full 100 game dataset
-   - Due to compute constraints, we could not locally host any models bigger than Qwen 3.5 2B.
+   - Due to compute constraints, we could not locally host any models bigger than Qwen 3.5 2B
+   - Due to the small model size of Qwen and GPT-4o-mini, the original system prompts were not specific enough to get the models to conform to the output format specified in the paper on their own. As such, we modified the system prompt so that the models could conform.
 
 ## 5. Reproduction Steps
 
@@ -103,6 +103,7 @@ python code/analyze.py
 | IO n=1 | 7.3% | 8.0%† | 4.0% | 2.0% |
 | IO best-of-100 | 33% | 100.0% | — | 58.0% |
 | CoT n=1 | 4.0% | 100.0% | 3.0% | 3.0% |
+| CoT-SC (k=100) | 9.0% | 100.0% | 7.0% | 2.0% |
 | CoT best-of-100 | 49% | 100.0% | 35.0% | 69.0% |
 | ToT b=1 | 45% | 72.0% | 20.0% | 0.0% |
 | ToT b=5 | **74%** | 92.0% | **41.0%** | 0.0%‡ |

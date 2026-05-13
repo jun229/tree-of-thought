@@ -36,7 +36,7 @@ We target reproducing the IO/CoT/CoT-SC vs ToT b∈{1,5} ordering, accepting abs
  - tools: In order to run Qwen locally, we utilized the Colab student subsciption to get access to the compute needed (in the form of A100 chips) 
  - Extensions: 
    1. Testing the prompting methods on models of varying sizes
-   2. Implementing and testing the models on a Monte Carlo Tree Search prompting method
+   2. Implementing and testing the models on a Monte Carlo variant of Tree of Thought
  - Challenges/Constraints: 
    - Due to cost constraints, we could not use the original GPT-4 model that the paper used
    - Due to cost constraints, we could not run Claude Haiku 4.5 on the full 100 game dataset
@@ -55,7 +55,7 @@ pip install -r code/requirements.txt
 
 # 2. Pick a backend. For Pro/Max users, no API key needed:
 export BACKEND=claude_cli:haiku
-# Or, free options (require API keys):
+# Or, other options (require API keys):
 #   export OPENAI_API_KEY=...    BACKEND=openai:gpt-4o-mini
 #   export GROQ_API_KEY=...      BACKEND=groq:llama-3.3-70b-versatile
 #   export GEMINI_API_KEY=...    BACKEND=gemini:gemini-2.0-flash
@@ -108,13 +108,22 @@ python code/analyze.py
 | ToT b=1 | 45% | 72.0% | 20.0% | 0.0% |
 | ToT b=5 | **74%** | 92.0% | **41.0%** | 0.0% |
 
-†Haiku IO n=1 is a parsing artifact — the model produces correct equations but appends a `**Verification:**` block that confuses the checker; IO best-of-100 (100%) reflects true competence. ‡Qwen ToT b=5 evaluated on 30 puzzles.
+Haiku IO n=1 is a parsing artifact — the model produces correct equations but appends a `**Verification:**` block that confuses the checker; IO best-of-100 (100%) reflects true competence. Qwen ToT b=5 evaluated on 30 puzzles.
 
-**Headline findings:** ToT's advantage is highly model-dependent. On strong models (haiku), CoT alone saturates the task (100% acc\_any) and ToT caps at 92% — the paper's "ToT > CoT" ordering inverts. On mid-tier models (GPT-4o-mini), the paper's ordering holds: ToT b=5 (41%) substantially outperforms CoT (3%). On the weak 2B model (Qwen), ToT collapses entirely (0%) — the model cannot reliably evaluate intermediate states — while best-of-100 sampling still reaches 69% via sheer volume.
+Monte Carlo ToT extension on GPT-4o-mini:
+
+| Method | Greedy ToT | Monte Carlo ToT |
+|---|---:|---:|
+| b=1 | 20.0% | 33.0% |
+| b=5 | 41.0% | 45.0% |
+
+The Monte Carlo extension on GPT-4o-mini showed further improved performance over greedy ToT. With b = 1, accuracy increased from 20% to 33%. With b = 5, accuracy increased from 41% to 45%. 
+
+**Headline findings:** ToT's advantage is highly model-dependent. On strong models (haiku), CoT alone saturates the task (100% acc\_any) and ToT caps at 92% — the paper's "ToT > CoT" ordering inverts. On mid-tier models (GPT-4o-mini), the paper's ordering holds: ToT b=5 (41%) substantially outperforms CoT (3%). On the weak 2B model (Qwen), ToT collapses entirely (0%) — the model cannot reliably evaluate intermediate states — while best-of-100 sampling still reaches 69% via sheer volume. The Monte Carlo results suggest that some ToT failures were caused by premature pruning. By sampling across multiple rollouts, the Monte Carlo variant was able to recover some of these missed branches and improve overall accuracy.
 
 ## 7. Conclusion
 
-We reproduce the core finding of Yao et al. — ToT outperforms IO and CoT baselines — while surfacing an important caveat: the magnitude of the gap is highly model-dependent. On the weaker GPT-4 baseline in the paper (CoT 4%, ToT 74%), structured search provides a dramatic lift; on modern Claude Haiku 4.5, CoT alone saturates the task. The reach-24 heuristic (extension 2) replaces LLM value calls with a deterministic arithmetic reachability check at zero additional cost, offering a practical path to cheaper ToT on tasks with verifiable intermediate states.
+We reproduce the core finding of Yao et al. — ToT outperforms IO and CoT baselines — while surfacing an important caveat: the magnitude of the gap is highly model-dependent. On the weaker GPT-4 baseline in the paper (CoT 4%, ToT 74%), structured search provides a dramatic lift; on modern Claude Haiku 4.5, CoT alone saturates the task. Our Monte Carlo extension further shows that ToT performance can improve when the search process is less greedily tied to early value estimates.
 
 ## 8. References
 

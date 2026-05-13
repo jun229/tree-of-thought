@@ -100,13 +100,13 @@ python code/analyze.py
 
 | Condition | Paper (GPT-4) | Haiku 4.5 | GPT-4o-mini | Qwen 3.5-2B |
 |---|---|---|---|---|
-| IO n=1 | 7.3% | 8.0%† | 4.0% | 2.0% |
+| IO n=1 | 7.3% | 8.0% | 4.0% | 2.0% |
 | IO best-of-100 | 33% | 100.0% | 33.0% | 58.0% |
 | CoT n=1 | 4.0% | 100.0% | 3.0% | 3.0% |
 | CoT-SC (k=100) | 9.0% | 100.0% | 7.0% | 2.0% |
 | CoT best-of-100 | 49% | 100.0% | 35.0% | 69.0% |
 | ToT b=1 | 45% | 72.0% | 20.0% | 0.0% |
-| ToT b=5 | **74%** | 92.0% | **41.0%** | 0.0%‡ |
+| ToT b=5 | **74%** | 92.0% | **41.0%** | 0.0% |
 
 †Haiku IO n=1 is a parsing artifact — the model produces correct equations but appends a `**Verification:**` block that confuses the checker; IO best-of-100 (100%) reflects true competence. ‡Qwen ToT b=5 evaluated on 30 puzzles.
 
